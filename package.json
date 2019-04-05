@@ -1,0 +1,16 @@
+{
+  "name": "huobi-robot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "NODE_ENV=dev DEBUG=true node index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "config": "^3.0.1",
+    "log4js": "^4.1.0",
+    "ws": "^6.2.1"
+  }
+}
