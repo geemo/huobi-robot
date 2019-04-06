@@ -4,8 +4,8 @@ const WebSocket = require('ws');
 const config = require('config');
 const zlib = require('zlib');
 const logger = require('./logger');
-const { sleep } = require('./util');
-const methods = require('../consts/method');
+const { sleep, uuid } = require('./util');
+const methods = require('./method');
 
 const wsUrl = config.get('wsUrlPrefix');
 
@@ -13,11 +13,7 @@ function connect(handler) {
   let ws = new WebSocket(wsUrl);
   ws.on('open', () => {
     logger.info(`connect ${wsUrl} success!`);
-
-    const sub = config.get('sub') || [];
-    for (let method of sub) {
-      ws.send();
-    }
+    handler.emitSub(ws);
   }).on('close', async () => {
     logger.error(`ws connection close`);
     await sleep(5000);
@@ -31,7 +27,7 @@ function connect(handler) {
         return;
       }
 
-      
+      handler.monit(ws, resObj);
     } catch(err) {
       logger.error(err);
     }
