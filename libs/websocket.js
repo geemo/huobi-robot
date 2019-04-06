@@ -1,15 +1,12 @@
 'use strict';
 
 const WebSocket = require('ws');
-const config = require('config');
 const zlib = require('zlib');
 const logger = require('./logger');
 const { sleep, uuid } = require('./util');
 const methods = require('./method');
 
-const wsUrl = config.get('wsUrlPrefix');
-
-function connect(handler) {
+function connect(wsUrl, handler) {
   let ws = new WebSocket(wsUrl);
   ws.on('open', () => {
     logger.info(`connect ${wsUrl} success!`);
@@ -32,6 +29,8 @@ function connect(handler) {
       logger.error(err);
     }
   });
+
+  return ws;
 }
 
 module.exports = {

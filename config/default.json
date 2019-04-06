@@ -2,6 +2,7 @@
   "apiKey": "----your apiKey----",
   "secretKey": "----your secretKey----",
   "restUrlPrefix": "https://api.hbdm.com",
-  "wsUrlPrefix": "wss://www.hbdm.com/ws",
+  "wsMarketUrlPrefix": "wss://www.hbdm.com/ws",
+  "wsOrderUrlPrefix": "wss://api.hbdm.com/notification",
   "sub": []
 }

@@ -59,7 +59,6 @@ function monit(ws, data) {
       handleMethods.sub[method](ws, args, data);
     }
   } else {
-    logger.info("req data: ", data);
     // 请求消息处理
     let obj = parseMethod(data.ch);
     let { method, args } = obj;
@@ -69,31 +68,37 @@ function monit(ws, data) {
 
 function subKline(ws, args, data) {
   logger.info('args: ', args);
-  logger.info('data: ', data);
+  logger.info('data: ', JSON.stringify(data, null, 2));
 }
 
 function subMarketDepth(ws, args, data) {
-
+  logger.info('args: ', args);
+  logger.info('data: ', JSON.stringify(data, null, 2));
 }
 
 function subMarketDetail(ws, args, data) {
-
+  logger.info('args: ', args);
+  logger.info('data: ', JSON.stringify(data, null, 2));
 }
 
 function subMarketTrade(ws, args, data) {
-
+  logger.info('args: ', args);
+  logger.info('data: ', JSON.stringify(data, null, 2));
 }
 
 function subOrders(ws, args, data) {
-
+  logger.info('args: ', args);
+  logger.info('data: ', JSON.stringify(data, null, 2));
 }
 
 function reqKline(ws, args, data) {
-
+  logger.info('args: ', args);
+  logger.info('data: ', JSON.stringify(data, null, 2));
 }
 
 function reqMarketTrade(ws, args, data) {
-
+  logger.info('args: ', args);
+  logger.info('data: ', JSON.stringify(data, null, 2));
 }
 
 module.exports = {
