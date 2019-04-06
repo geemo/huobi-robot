@@ -12,12 +12,12 @@ let handleMethods = {
     market_kline: subKline,
     market_depth: subMarketDepth,
     market_detail: subMarketDetail,
-    market_trade: subTradeDetail,
+    market_trade: subMarketTrade,
     order: subOrders
   },
   req: {
     market_kline: reqKline,
-    market_trade: reqTradeDetail
+    market_trade: reqMarketTrade
   }
 };
 
@@ -80,7 +80,7 @@ function subMarketDetail(ws, args, data) {
 
 }
 
-function subTradeDetail(ws, args, data) {
+function subMarketTrade(ws, args, data) {
 
 }
 
@@ -92,7 +92,7 @@ function reqKline(ws, args, data) {
 
 }
 
-function reqTradeDetail(ws, args, data) {
+function reqMarketTrade(ws, args, data) {
 
 }
 

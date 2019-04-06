@@ -7,12 +7,12 @@ module.exports = {
     market_kline: subKline,
     market_depth: subMarketDepth,
     market_detail: subMarketDetail,
-    market_trade: subTradeDetail,
+    market_trade: subMarketTrade,
     order: subOrders
   },
   req: {
     market_kline: reqKline,
-    market_trade: reqTradeDetail
+    market_trade: reqMarketTrade
   }
 };
 
@@ -51,7 +51,7 @@ function subMarketDetail(s) {
 
 // 订阅交易详情
 // s <==> symbol
-function subTradeDetail(s) {
+function subMarketTrade(s) {
   let symbol = s;
 
   return {
@@ -95,7 +95,7 @@ function reqKline(spft) {
 
 // 请求交易详情
 // s <==> symbol
-function reqTradeDetail(s) {
+function reqMarketTrade(s) {
   let symbol = s;
 
   return {
