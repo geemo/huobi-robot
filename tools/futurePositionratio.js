@@ -5,11 +5,109 @@ const moment = require('moment');
 const { Parser } = require('json2csv');
 const fs = require('fs');
 const path = require('path');
+const logger = require('../libs/logger');
 const { execSync } = require('child_process');
 
-module.exports = {
-  getHourDate
-};
+const config = require('config');
+const websocket = require('../libs/websocket');
+const marketMethods = require('../libs/marketMethod');
+const methods = require('../libs/marketMethod');
+
+const UP_DOWN_DATA = [
+  ['暴涨', '2019-01-14 22:00'],
+  ['暴跌', '2019-01-20 18:00'],
+  ['暴跌', '2019-01-28 06:00'],
+  ['暴跌', '2019-02-06 08:00'],
+  ['暴涨', '2019-02-08 22:00'],
+  ['暴涨', '2019-02-18 04:00'],
+  ['暴涨', '2019-02-23 04:00'],
+  ['暴跌', '2019-02-24 22:00'],
+  ['暴跌', '2019-02-28 04:00'],
+  ['暴涨', '2019-04-02 12:00'],
+  ['暴跌', '2019-04-06 06:00'],
+];
+let UP_DOWN_DATA_IDX = -1;
+
+const parser = new Parser({
+  fields: ['时间', '高', '低', '预警', '精英多头', '精英空头', '平均值', '差额']
+});
+
+
+websocket.connect(
+  config.get('marketWsUrl'),
+  { emit, monit }
+);
+
+function emit(ws) {
+  UP_DOWN_DATA_IDX++
+  let [upDown, date] = UP_DOWN_DATA[UP_DOWN_DATA_IDX];
+  let [from, to] = beforeAfterSixHour(date);
+
+  let req = methods.req['kline'](`BTC_CQ.60min.${from}.${to}`);
+  logger.info(req, from, to);
+  ws.send(JSON.stringify(req), err => {
+    if (err) {
+      logger.error(`error req: `, req, err);
+      return;
+    }
+  });
+}
+
+
+async function monit(ws, data) {
+  if (data.rep) {
+    let klineDate = data.data;
+    let position = await getHourDate(
+      'okexbtcusdquarter',
+      moment.unix(klineDate[0].id).format('YYYY-MM-DD HH:mm'),
+      moment.unix(klineDate[klineDate.length - 1].id).format('YYYY-MM-DD HH:mm')
+    );
+
+    let writeDate = [];
+    logger.info(`upDownElem: `, UP_DOWN_DATA[UP_DOWN_DATA_IDX], UP_DOWN_DATA_IDX);
+    
+    for (let i = 0; i < klineDate.length; i++) {
+      let longs = parseFloat(position[i].longs);
+      let shorts = parseFloat(position[i].shorts);
+
+      writeDate.push({
+        '时间': moment.unix(klineDate[i].id).format('YYYY-MM-DD HH:mm'),
+        '高': klineDate[i].high,
+        '低': klineDate[i].low,
+        '预警': getWarningInfo(i, UP_DOWN_DATA[UP_DOWN_DATA_IDX]),
+        '精英多头': longs,
+        '精英空头': shorts,
+        '平均值': Math.round((longs + shorts) / 2 * 100) / 100,
+        '差额': Math.round((longs - shorts) * 100) / 100
+      });
+    }
+
+    const csv = parser.parse(writeDate);
+
+    let [upDown, upDownDate] = UP_DOWN_DATA[UP_DOWN_DATA_IDX];
+    fs.writeFileSync(path.resolve(__dirname, `${upDownDate}_${upDown}.csv`), csv);
+
+    if (UP_DOWN_DATA_IDX < (UP_DOWN_DATA.length - 1)) {
+      emit(ws);
+    }
+  }
+}
+
+function getWarningInfo(dataIdx, upDownElem) {
+  let [ upDown ] = upDownElem;
+
+  let hour = (6 - dataIdx);
+  let prefix = hour >= 0 ? `${upDown}前` : `${upDown}后`;
+
+  return `${prefix}${Math.abs(hour)}H`;
+}
+
+function beforeAfterSixHour(date) {
+  let from = moment(date).subtract(6, 'h').unix();
+  let to = moment(date).add(6, 'h').unix();
+
+  return [from, to];
+}
 
 function exec(cmd) {
   return execSync(cmd, { encoding: 'utf8' });
@@ -29,32 +127,7 @@ async function getHourDate(symbol, startTime, endTime) {
     }
   });
 
-  let data = res.data.data;
-
-  return data.map(item => {
-    let longs = parseFloat(item.longs);
-    let shorts = parseFloat(item.shorts);
-    return {
-      '日期': moment(+item.date).format('YYYY-MM-DD HH:mm'),
-      '精英多头': longs,
-      '精英空头': shorts,
-      '平均值': Math.round((longs + shorts) / 2 * 100) / 100,
-      '差额': Math.round((longs - shorts) * 100) / 100
-    };
-  });
+  return res.data.data;
 }
 
-// (async () => {
-//   let res = await getHourDate('okexbtcusdquarter', '2019-02-24 08:00', '2019-02-25 00:00');
-//   fs.writeFileSync(path.resolve(__dirname, 'in.json'), JSON.stringify(res));
 
-//   const parser = new Parser({
-//     fields: ['日期', '精英多头', '精英空头', '平均值', '差额']
-//   });
-
-//   const csv = parser.parse(res);
-
-//   console.log(csv);
-// })();
-
-async function getReport(symbol, startTime)

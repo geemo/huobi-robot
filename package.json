@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "NODE_ENV=dev DEBUG=true node index.js"
+    "dev": "NODE_ENV=dev DEBUG=true node index.js",
+    "tool": "NODE_ENV=tool DEBUG=true node tools/futurePositionratio.js"
   },
   "author": "",
   "license": "ISC",
