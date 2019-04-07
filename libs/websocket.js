@@ -4,13 +4,12 @@ const WebSocket = require('ws');
 const zlib = require('zlib');
 const logger = require('./logger');
 const { sleep, uuid } = require('./util');
-const methods = require('./method');
 
-function connect(wsUrl, handler) {
+function connect(wsUrl, handler, subDirects, reqDirects) {
   let ws = new WebSocket(wsUrl);
   ws.on('open', () => {
     logger.info(`connect ${wsUrl} success!`);
-    handler.emitSub(ws);
+    handler.emit(ws, subDirects, reqDirects);    
   }).on('close', async () => {
     logger.error(`ws connection close`);
     await sleep(5000);
@@ -29,8 +28,6 @@ function connect(wsUrl, handler) {
       logger.error(err);
     }
   });
-
-  return ws;
 }
 
 module.exports = {

@@ -1,12 +1,9 @@
 'use strict';
 
-const methods = require('./method');
+const methods = require('./marketMethod');
 const logger = require('./logger');
 const { parseMethod } = require('./util');
-const config = require('config');
-const sub = config.get('sub');
 
-let subStatus = {};
 let handleMethods = {
   sub: {
     market_kline: subKline,
@@ -21,16 +18,24 @@ let handleMethods = {
   }
 };
 
-function emitSub(ws) {
-  for (let item of sub) {
+function emit(ws, subDirects, reqDirects) {
+  for (let item of subDirects) {
     let [method, args] = item.split('|');
-    let req = methods.sub[method](args);
+    let sub = methods.sub[method](args);
+    ws.send(JSON.stringify(sub), err => {
+      if (err) {
+        logger.error(`error sub: `, sub, err);
+        return;
+      }
+    });
+  }
 
-    subStatus[req.sub] = { id: req.id };
-
+  for (let item of reqDirects) {
+    let [method, args] = item.split('|');
+    let req = methods.req[method](args);
     ws.send(JSON.stringify(req), err => {
       if (err) {
-        logger.error(`emit ${req.sub}||${req.id} error: `, err);
+        logger.error(`error req: `, req, err);
         return;
       }
     });
@@ -38,32 +43,37 @@ function emitSub(ws) {
 }
 
 function monit(ws, data) {
+  // 订阅成功响应消息  
   if (data.subbed) {
-    // 订阅成功响应消息
-    subStatus[data.subbed] = data;
     logger.info(`subscribe success: `, data);
-  } else if (data['err-code']) {
-    // 订阅失败响应消息
-    for (let sub in subStatus) {
-      if (subStatus[sub].id === data.id) {
-        subStatus[sub] = data;
-        logger.error(`subscribe error: `, data);
-        break;
-      }
-    }
-  } else if (data.tick) {
-    // 订阅消息处理
+    return;
+  }
+  
+  // 订阅失败响应消息  
+  if (data['err-code']) {
+    logger.error(data);
+    return; 
+  }
+  
+  // 订阅消息处理  
+  if (data.ch) {
     let obj = parseMethod(data.ch);
     if (obj) {
       let { method, args } = obj;
       handleMethods.sub[method](ws, args, data);
     }
-  } else {
-    // 请求消息处理
-    let obj = parseMethod(data.ch);
+    return;
+  }
+  
+  // 请求消息处理  
+  if (data.rep) {
+    let obj = parseMethod(data.rep);
     let { method, args } = obj;
     handleMethods.req[method](ws, args, data);
+    return;
   }
+
+  logger.error(data);
 }
 
 function subKline(ws, args, data) {
@@ -102,7 +112,7 @@ function reqMarketTrade(ws, args, data) {
 }
 
 module.exports = {
-  emitSub,
+  emit,
   monit
 };
 

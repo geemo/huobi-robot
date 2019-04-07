@@ -2,10 +2,17 @@
 
 const config = require('config');
 const websocket = require('./libs/websocket');
-const handler = require('./libs/handler');
 
-const wsMarketUrlPrefix = config.get('wsMarketUrlPrefix');
-const wsOrderUrlPrefix = config.get('wsOrderUrlPrefix');
+websocket.connect(
+  config.get('marketWsUrl'),
+  require('./libs/marketHandler'),
+  config.get('marketSubDirects'),
+  config.get('marketReqDirects')
+);
 
-websocket.connect(wsMarketUrlPrefix, handler);
-// websocket.connect(wsOrderUrlPrefix, handler);
+// websocket.connect(
+//   config.get('orderWsUrl'),
+//   require('./libs/orderHandler'),
+//   config.get('orderSubDirects'),
+//   config.get('orderReqDirects')
+// );

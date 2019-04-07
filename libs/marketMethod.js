@@ -4,15 +4,14 @@ const { uuid } = require('./util');
 
 module.exports = {
   sub: {
-    market_kline: subKline,
-    market_depth: subMarketDepth,
-    market_detail: subMarketDetail,
-    market_trade: subMarketTrade,
-    order: subOrders
+    kline: subKline,
+    depth: subMarketDepth,
+    detail: subMarketDetail,
+    trade: subMarketTrade
   },
   req: {
-    market_kline: reqKline,
-    market_trade: reqMarketTrade
+    kline: reqKline,
+    trade: reqMarketTrade
   }
 };
 
@@ -60,22 +59,10 @@ function subMarketTrade(s) {
   };
 }
 
-// 订阅订单
-// s <==> symbol
-function subOrders(s) {
-  let symbol = s;
-
-  return {
-    op: 'sub',
-    cid: uuid(),
-    topic: `orders.${symbol}`
-  };
-}
-
 // 请求 k 线
 // spft <==> symbol_period[_from_to]
 function reqKline(spft) {
-  let [symbol, period, from, to] = sp.split('.');
+  let [symbol, period, from, to] = spft.split('.');
   
   let ret = {
     req: `market.${symbol}.kline.${period}`,

@@ -1,3 +1,5 @@
 config/dev.json
 node_modules/
 logs/
+tools/**/*.json
+tools/**/*.csv

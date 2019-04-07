@@ -1,9 +1,14 @@
 'use strict';
 
+const crypto = require('crypto');
+const moment = require('moment');
+const config = require('config');
+
 module.exports = {
   sleep,
   uuid: _uuid(1000, 2000),
-  parseMethod
+  parseMethod,
+  sign
 };
 
 function sleep(ms) {
@@ -24,8 +29,8 @@ function _uuid(start, end) {
   };
 }
 
-function parseMethod(ch) {
-  let parts = ch.split('.');
+function parseMethod(chReq) {
+  let parts = chReq.split('.');
   let method = `${parts[0]}_${parts[2]}`;
 
   switch(method) {
@@ -45,4 +50,21 @@ function parseMethod(ch) {
   }
 
   return null;
+}
+
+function sign(method, baseUrl, path, body) {
+  let pairs = [];
+  for (let key in body) {
+    pairs.push(`${key}=${encodeURIComponent(body[key])}`);
+  }
+
+  let concatBody = pairs.sort().join('&');
+  let meta = [method, baseUrl, path, concatBody].join('\n');
+
+  let hash = crypto
+    .createHmac('sha256', config.get('secretKey'))
+    .update(meta)
+    .digest('base64');
+  
+  return `${concatBody}&Signature=${encodeURIComponent(hash)}`
 }
